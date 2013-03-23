@@ -15,6 +15,8 @@ public:
     vec velocity;
     vec force;
     string element;
+    int myindexInAllAtoms;
+    bool canMove;
 };
 
 #endif // ATOM_H

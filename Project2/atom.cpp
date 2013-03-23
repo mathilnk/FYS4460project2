@@ -14,5 +14,7 @@ Atom::Atom(vec position, vec velocity, string element)
     this->velocity = velocity;
     this->element = element;
     this->force = zeros(3,1);
+    this->canMove = true;
+
 
 }

@@ -1,0 +1,2 @@
+all:
+	c++ main.cpp atom.cpp cell.cpp cellcontainer.cpp cellsolver.cpp makematrix.cpp normal.cpp simulation.cpp test.cpp -fopenmp -o run_main

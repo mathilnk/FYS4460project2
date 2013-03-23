@@ -8,18 +8,23 @@ SOURCES += main.cpp \
     cell.cpp \
     cellcontainer.cpp \
     cellsolver.cpp \
-    thermostattest.cpp\
-    normal.cpp
+    normal.cpp \
+    test.cpp \
+    makematrix.cpp \
+    simulation.cpp
 
 HEADERS += \
     atom.h \
     cell.h \
     cellcontainer.h \
     cellsolver.h \
-    thermostattest.h \
-    normal.hpp
+    normal.hpp \
+    test.h \
+    makematrix.h \
+    simulation.h
 
 LIBS +=-fopenmp
+LIBS += -lconfig++
 
 COMMON_CXXFLAGS +=  -fopenmp
 QMAKE_CXXFLAGS += $$COMMON_CXXFLAGS

@@ -1,0 +1,11 @@
+\documentclass[a4paper, english,10pt]{article}
+
+\include{preamble_project2}
+\include{customCommands_project2}
+
+\begin{document}
+\title{FYS4460 - \\  Second compulsory project}
+\author{Mathilde Nygaard Kamperud}
+\maketitle
+\input{parallell}
+\end{document} 

@@ -19,9 +19,9 @@ void Cell::addAtom(Atom *a){
 
 //    }
 //    numberOfAtoms++;
+
     myAtoms.push_back(a);
     numberOfAtoms++;
-
 }
 
 bool Cell::isEmpty(){

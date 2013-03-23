@@ -4,10 +4,16 @@
 #include<math.h>
 #include"cellcontainer.h"
 #include"normal.hpp"
+#include"omp.h"
+#include<libconfig.h++>
+
 class CellSolver
 {
 public:
-    CellSolver(int CellNx, int CellNy, int CellNz, int Nx, int Ny, int Nz,int max_time_steps, double b, double T, double r_cut, string element);
+    CellSolver(string config_file_name);
+    CellSolver(string filename, int CellNx, int CellNy, int CellNz, int Nx, int Ny, int Nz, int max_time_steps,double b, double T, double r_cut, string element, int num_pro);
+    //CellSolver(string filename, int CellNx, int CellNy, int CellNz, int Nx, int Ny, int Nz, int max_time_steps,int start_time_step, double r_cut, double b, int num_pro);
+    CellSolver(int CellNx, int CellNy, int CellNz, int Nx, int Ny, int Nz,int max_time_steps, double b, double T, double r_cut, string element, int num_pro);
     //system parameters
     int CellNx;
     int CellNy;
@@ -22,17 +28,19 @@ public:
     double mass;
     double k;
     double sig, mean,pi, r_cut;
-    double Lx,Ly,Lz;
-    int seed,current_time_step;
+    double Lx,Ly,Lz,L0;
+    int seed,current_time_step, num_time_steps;
     double volume;
     //Conversion factors
-    double T0,L0;
+    double T0;
     double dt;
     int numOfBins;
     double T_bath;
     bool Andersen, Berendsen;
     bool thermostatON;
     string current_time_step_string;
+    vector<vec> forces;
+
 
 
     //initialize
@@ -44,15 +52,18 @@ public:
     void writeEnergyToFile(string filename);
     void writeMeasurementsToFile(string filename);
     void writeRadialToFile(string filename);
+
+    void loadVMDfile(string filename);
     //Solve_methods
     void solve_one_time_step(double t, double dt, string filename, bool writeVMD,bool writeMeasurements);
     void solve(double t_start, int timesteps, double dt, string filename, bool writeVMD=true,bool writeMeasurements=false, double T_bath = 0, bool Berendsen = false, bool Andersen=false);
+    void solve();
 
 
     //forces
     void findForces();
     void cleanForces();
-    vec force_between(vec r_1, vec r_2, bool sameCell=true);
+    vec force_between(vec r_1, vec r_2, double *pot_energy_thread, double *pressure_sum_thread);
 
 
     //update and measurements
@@ -68,7 +79,9 @@ public:
     //other
     double gauss(double s, double mean);
     vec findRadial();
-
+    int num_pro;
+    bool print_to_screen;
+    string writeToFilename;
 
 
     CellContainer* myContainer;
@@ -88,9 +101,16 @@ public:
     vec pressure;
     vec displacement;
     vec radial_distribution;
+    double time_spent;
 
     double count;
     bool slow;
+
+    /////////
+    //bools//
+    /////////
+    bool writeVMD;
+    bool writeMeasurements;
 };
 
 #endif // CELLSOLVER_H

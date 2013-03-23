@@ -10,16 +10,22 @@
 #include"cellsolver.h"
 
 
-#include"thermostattest.h";
+#include"test.h"
+#include"makematrix.h"
+#include"simulation.h"
 
 
-//using namespace std;
-//using namespace arma;
+using namespace std;
+using namespace arma;
 
-int main()
+
+int main(int argc, const char* argv[])
 {
-    new ThermostatTest();
-    //new TimeTest();
+    string experiment_name = argv[1];
+    string experiment_folder = argv[2];
+    string configFileName = experiment_folder + experiment_name + "_config.cfg";
+    CellSolver* s = new CellSolver(configFileName);
+    s->solve();
     return 0;
 };
 

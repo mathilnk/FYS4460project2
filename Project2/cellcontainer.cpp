@@ -7,9 +7,12 @@ CellContainer::CellContainer(int Nx, int Ny, int Nz, double r_cut)
     this->Nz = Nz;
     this->N = Nx*Ny*Nz;
     this->numberOfAtoms = 0;
+    this->numOfMovableAtoms=0;
+    this->numOfNotMovAtoms=0;
     this->r_cut = r_cut;
     first = true;
     makeCells();
+    index = 0;
 
 }
 
@@ -19,7 +22,6 @@ void CellContainer::makeCells(){
       */
     ////cout<<Nz<<endl;
     for(int i=0;i<N;i++){
-
         myCells.push_back(Cell());
     }
 }
@@ -27,12 +29,14 @@ void CellContainer::makeCells(){
 
 void CellContainer::addAtom(Atom * a){
     int cellNumber = findCellNumberForAtom(a);
+
     ////cout<<myCells.size()<<endl;
     myCells[cellNumber].addAtom(a);
+
     if(first){
         allAtoms.push_back(a);
+        a->myindexInAllAtoms = index++;
     }
-    ////cout<<a->force<<endl;
 
     numberOfAtoms++;
 }
@@ -43,6 +47,64 @@ void CellContainer::addAtom(Atom * a){
 
 //}
 
+void CellContainer::updateCells(){
+    Cell currentCell, bufferCell;
+    Atom* atm;
+    CellContainer* buffer = new CellContainer(Nx, Ny, Nz, r_cut);
+    numOfMovableAtoms = 0;
+    numOfNotMovAtoms = 0;
+
+    for(int i=0;i<numberOfAtoms;i++){
+        atm = allAtoms[i];
+        buffer->addAtom(atm);
+        if(atm->canMove){
+            numOfMovableAtoms++;
+        }
+    }
+    //cout<<"move "<<numOfMovableAtoms<<endl;
+    numOfNotMovAtoms = numberOfAtoms-numOfMovableAtoms;
+
+    //copy this buffer into this
+    for(int i=0;i<N; i++){
+        currentCell = myCells[i];
+        bufferCell = buffer->myCells[i];
+        currentCell.myAtoms = bufferCell.myAtoms;
+    }
+
+//    //first we clear out the cells
+//    for(int i=0;i<N;i++){
+//        currentCell = myCells[i];
+//        currentCell.myAtoms.clear();
+//        currentCell.numberOfAtoms = 0;
+//    }
+//    int realNumberOfAtoms = numberOfAtoms;
+//    numberOfAtoms = 0; //will be updated in addAtom()
+//    //now we put the atoms from allAtoms into the right cells by using addAtom()
+//    for(int i=0;i<realNumberOfAtoms;i++){
+//        atm = allAtoms[i];
+//        addAtom(atm);
+//    }
+}
+
+void CellContainer::removeAtom(int atomIndexInAllAtoms){
+    /*
+     *This method removes an atom from allAtoms. When you run an updateCells(), the
+     *removed atoms will disappear from the cells as well. Could do this here? hm..
+     */
+    allAtoms.erase(allAtoms.begin() + atomIndexInAllAtoms);
+    numberOfAtoms--; //update numerOfAtoms
+    Atom *atm;
+    //update all the atoms' myindexInAllAtoms, after the one being removed
+    for(int i=atomIndexInAllAtoms;i<numberOfAtoms;i++){
+        atm = allAtoms[i];
+        atm->myindexInAllAtoms-=1;
+    }
+    //update myindexInAllAtoms so that if another atom is added later it
+    //will get the right index
+    index--;
+
+}
+
 int CellContainer::findCellNumberForAtom(Atom* a){
     /*
       This method finds the correct cellNumber for a given atom. It finds the correct cellCoordinates, and then uses the method findCellNumberForCell.
@@ -52,6 +114,7 @@ int CellContainer::findCellNumberForAtom(Atom* a){
     for(int i=0;i<3;i++){
         cellPosition[i] = a->position[i]/r_cut;
     }
+
     //cout<<a->position[0]<<endl;//atomet vi sender inn har ingen posisjon
     int cellNumber = findCellNumberForCell(cellPosition[0], cellPosition[1], cellPosition[2]);
 
@@ -170,11 +233,76 @@ void CellContainer::writeVMDfile(string filename, string comment, string element
                      //aangstrom per femtosekund
                     writeToFile<<a->velocity[k]<<" ";
                 }
-                writeToFile<<"\n";
+                writeToFile<<a->canMove<<"\n";
 
             }
 
         }
 
     }
+}
+
+void CellContainer::writeOnlyNOTMovAtomsVMD(string filename, string comment, string element){
+    /*
+      This method writes a VMD-formatted file called filename.
+      */
+    ofstream writeToFile;
+
+    const char* filename_ch = filename.c_str();
+    writeToFile.open(filename_ch);
+    writeToFile<<numOfNotMovAtoms<<endl;
+    writeToFile<<comment<<endl;
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //runs through allAtoms, and write the position and velocity of the atoms who can move//
+    ////////////////////////////////////////////////////////////////////////////////////////
+    Atom * atm;
+    for(int i=0;i<numberOfAtoms;i++){
+        atm = allAtoms[i];
+        if(!(atm->canMove)){
+            writeToFile<<element<<" ";
+            for(int p=0;p<3;p++){
+                writeToFile<<atm->position[p]<<" ";
+            }
+            for(int k=0;k<3;k++){
+                writeToFile<<atm->velocity[k]<<" ";
+            }
+            writeToFile<<"\n";
+        }
+    }
+}
+
+
+
+void CellContainer::writeOnlyMovAtomsVMD(string filename, string comment, string element){
+    /*
+      This method writes a VMD-formatted file called filename.
+      */
+    ofstream writeToFile;
+
+    const char* filename_ch = filename.c_str();
+    writeToFile.open(filename_ch);
+    writeToFile<<numOfMovableAtoms<<endl;
+    writeToFile<<comment<<endl;
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //runs through allAtoms, and write the position and velocity of the atoms who can move//
+    ////////////////////////////////////////////////////////////////////////////////////////
+    Atom * atm;
+    for(int i=0;i<numberOfAtoms;i++){
+        atm = allAtoms[i];
+        if(atm->canMove){
+            writeToFile<<element<<" ";
+            for(int p=0;p<3;p++){
+                writeToFile<<atm->position[p]<<" ";
+            }
+            for(int k=0;k<3;k++){
+                writeToFile<<atm->velocity[k]<<" ";
+            }
+            writeToFile<<"\n";
+        }
+    }
+
 }
